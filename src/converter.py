@@ -1,38 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-
-def yuv_to_ppmrgb(yuv_entry):
+def read_yuv_pgm(filename):
     """
-    Convert a YUV image to RGB.
-    """
-    yuv_entry = np.reshape(yuv_entry, (-1, 3))
-    yuv_entry = yuv_entry.astype(np.float32)
-
-    y = yuv_entry[:720, :720]
-    u = yuv_entry[720:, :720]
-    v = yuv_entry[720:, 720:]
-
-    r = y + 1.402 * (v - 128)
-    g = y - 0.344136 * (u - 128) - 0.714136 * (v - 128)
-    b = y + 1.772 * (u - 128)
-
-    r = np.clip(r, 0, 255)
-    g = np.clip(g, 0, 255)
-    b = np.clip(b, 0, 255)
-
-    rgb_image = np.stack((r, g, b), axis=-1)
-    rgb_image = rgb_image.astype(np.uint8)
-
-    return rgb_image
-    
-
-def open_yuv(filename, width, height):
-    """
-    Open a YUV image file and return a numpy array containing the image data.
+    Reads a YUV PGM file into a np array.
     """
     with open(filename, "rb") as f:
-    # read the header
+        # read the header
         header = f.readline()
         assert header == b"P5\n"
 
@@ -40,37 +14,39 @@ def open_yuv(filename, width, height):
         size = f.readline()
         width, height = [int(x) for x in size.split()]
 
-        # read the max value
-        maxval = f.readline()
-        assert maxval == b"255\n"
-
-        # read the data
-        data = f.read()
-
         # convert the data to a numpy array
-        img = np.frombuffer(data, dtype=np.uint8)
+        img = plt.imread(filename).astype(np.uint8)
         img = img.reshape((height, width))
 
-        return img 
+    y_width = width
+    y_height = height * 2 // 3
+    uv_width = width // 2
 
-def save_rgb(filename, rgb_image):
+    y = img[:y_height, :y_width]
+
+    u = img[y_height:, :uv_width]
+    v = img[y_height:, uv_width:]
+
+    u = np.repeat(u, 2, axis=0)
+    v = np.repeat(v, 2, axis=0)
+
+    u = np.repeat(u, 2, axis=1)
+    v = np.repeat(v, 2, axis=1)
+
+    return np.dstack((y, u, v)).astype(np.uint8)
+
+def yuv_to_rgb(yuv_img):
     """
-    Save a ppm RGB encoded image to a file.
+    Converts a YUV image to RGB.
     """
-    with open(filename, 'wb') as file:
-        file.write(b'P6\n')
-        file.write(b'# Created by YUV2RGB\n')
-        file.write(b'720 720\n')
-        file.write(b'255\n')
-        file.write(rgb_image.tobytes())
+    y = yuv_img[:, :, 0].astype(np.float32)
+    u = yuv_img[:, :, 1].astype(np.float32)
+    v = yuv_img[:, :, 2].astype(np.float32)
 
-if __name__ == '__main__':
-    filename = input('Enter the filename of the YUV image: ')
+    r = np.clip(y + 1.402 * (v - 128), 0, 255)
+    g = np.clip(y - 0.344136 * (u - 128) - 0.714136 * (v - 128), 0, 255)
+    b = np.clip(y + 1.772 * (u - 128), 0, 255)
 
-    yuv_image = open_yuv(filename, 720, 720)
+    return np.stack((r, g, b), axis=-1).astype(np.uint8)
 
-    rgb_image = yuv_to_ppmrgb(yuv_image)
 
-    save_rgb('rgb_image.ppm', rgb_image)
-
-    plt.imshow(rgb_image)
