@@ -1,7 +1,5 @@
-import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-import numba as nb
 from PIL import Image
 
 
@@ -25,8 +23,8 @@ def yuv_to_rgb(img: np.ndarray) -> np.ndarray:
 
     y = img[:y_height, :width]
 
-    u = img[y_height:, :uv_width] - 128
-    v = img[y_height:, uv_width:] - 128
+    v = img[y_height:, :uv_width] - 128
+    u = img[y_height:, uv_width:] - 128
 
     u = u.repeat(2, axis=0).repeat(2, axis=1)
     v = v.repeat(2, axis=0).repeat(2, axis=1)

@@ -1,13 +1,15 @@
+import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import os
 import sys
 import time
-import cv2
 
 from PIL import Image
 from converter import yuv_to_rgb
+from multiprocessing import Pool
+from itertools import repeat
 
 
 def compute_frame(frame_name: str) -> np.ndarray:
@@ -34,10 +36,15 @@ def get_sequence_infos(directory: str) -> (int, int, int, np.ndarray):
 
     return height, width, num_files, img
 
-def write_all_frames(input_dir: str, output_dir: str, num_files: str) -> None:
-    for i in range(num_files):
-        img = compute_frame(f"{input_dir}/{i}.pgm")
-        cv2.imwrite(f"{output_dir}/{i}.ppm", img)
+def compute_and_write_frame(frame_data):
+    frame_name, input_dir, output_dir = frame_data
+    img = compute_frame(os.path.join(input_dir, frame_name))
+    cv2.imwrite(os.path.join(output_dir, frame_name.replace(".pgm", ".ppm")), img)
+
+def write_all_frames(input_dir: str, output_dir: str, num_files: int) -> None:
+    with Pool() as pool:
+        frame_names = [f"{i}.pgm" for i in range(num_files)]
+        pool.map(compute_and_write_frame, zip(frame_names, repeat(input_dir), repeat(output_dir)))
 
 
 if __name__ == "__main__":
@@ -70,7 +77,7 @@ if __name__ == "__main__":
         num_files = count_files(directory)
 
         start_time = time.time()
-        write_all_frames(directory, "output", num_files)
+        write_all_frames(directory, "data/elementary/lci_rgb", num_files)
         end_time = time.time()
         elapsed_time = end_time - start_time
 
