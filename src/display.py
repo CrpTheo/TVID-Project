@@ -6,10 +6,8 @@ import sys
 import time
 import cv2
 
-from converter import yuv_to_rgb
-from functools import partial
-from numba import njit
 from PIL import Image
+from converter import yuv_to_rgb
 
 
 def compute_frame(frame_name: str) -> np.ndarray:
