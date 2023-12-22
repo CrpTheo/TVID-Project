@@ -313,8 +313,10 @@ void dump_state (FILE * f, mpeg2_state_t state, const mpeg2_info_t * info,
 	    fprintf (f, " profile %02x", seq->profile_level_id);
 	if (seq->flags & SEQ_FLAG_CONSTRAINED_PARAMETERS)
 	    fprintf (f, " CONST");
-	if (seq->flags & SEQ_FLAG_PROGRESSIVE_SEQUENCE)
-	    fprintf (f, " PROG");
+	if (seq->flags & SEQ_FLAG_PROGRESSIVE_SEQUENCE) {
+		fprintf (f, " PROG");
+		fprintf (header, " PROG");		
+	}
 	if (seq->flags & SEQ_FLAG_LOW_DELAY)
 	    fprintf (f, " LOWDELAY");
 	if ((seq->flags & SEQ_MASK_VIDEO_FORMAT) <
