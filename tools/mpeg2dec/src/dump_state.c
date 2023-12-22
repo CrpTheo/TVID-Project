@@ -30,7 +30,7 @@
 #include "mpeg2.h"
 
 void dump_state (FILE * f, mpeg2_state_t state, const mpeg2_info_t * info,
-		 int offset, int verbose);
+		 int offset, int verbose, FILE* header);
 
 static struct {
     const mpeg2_sequence_t * ptr;
@@ -210,7 +210,7 @@ static void pic_code_del (const mpeg2_picture_t * pic)
 }
 
 void dump_state (FILE * f, mpeg2_state_t state, const mpeg2_info_t * info,
-		 int offset, int verbose)
+		 int offset, int verbose, FILE* header)
 {
     static const char * state_name[] = {
 	"BUFFER", "SEQUENCE", "SEQUENCE_REPEATED","GOP",
@@ -356,6 +356,19 @@ void dump_state (FILE * f, mpeg2_state_t state, const mpeg2_info_t * info,
 		 seq->display_width, seq->display_height,
 		 seq->pixel_width, seq->pixel_height,
 		 seq->frame_period);
+
+	// ADDED
+	fprintf (header, " %dx%d chroma %dx%d fps %.*f maxBps %d vbv %d "
+		 "picture %dx%d display %dx%d pixel %dx%d frame_period %d\n",
+		 seq->width, seq->height,
+		 seq->chroma_width, seq->chroma_height,
+		 27000000%seq->frame_period?2:0, 27000000.0/seq->frame_period,
+		 seq->byte_rate, seq->vbv_buffer_size,
+		 seq->picture_width, seq->picture_height,
+		 seq->display_width, seq->display_height,
+		 seq->pixel_width, seq->pixel_height,
+		 seq->frame_period);
+
 	if (mpeg2_guess_aspect (seq, &pixel_width, &pixel_height))
 	    fprintf (f, " guessed %dx%d", pixel_width, pixel_height);
 	fprintf (f, "\n");
@@ -376,16 +389,25 @@ void dump_state (FILE * f, mpeg2_state_t state, const mpeg2_info_t * info,
 	       info->current_picture : info->current_picture_2nd);
 	fprintf (f, " %c",
 		 coding_type[pic->flags & PIC_MASK_CODING_TYPE]);
-	if (pic->flags & PIC_FLAG_PROGRESSIVE_FRAME)
+	if (pic->flags & PIC_FLAG_PROGRESSIVE_FRAME) {
 	    fprintf (f, " PROG");
+		fprintf (header, " PROG");
+	}
 	if (pic->flags & PIC_FLAG_SKIP)
 	    fprintf (f, " SKIP");
 	fprintf (f, " fields %d", pic->nb_fields);
-	if (pic->flags & PIC_FLAG_TOP_FIELD_FIRST)
+	if (pic->flags & PIC_FLAG_TOP_FIELD_FIRST) {
 	    fprintf (f, " TFF");
+		fprintf (header, " TFF");
+	} else {
+	    fprintf (f, " BFF");
+		fprintf (header, " BFF");
+	}
 	// ADDED
-	if (pic->flags & PIC_FLAG_REPEAT_FIRST_FIELD)
+	if (pic->flags & PIC_FLAG_REPEAT_FIRST_FIELD) {
 	    fprintf (f, " RFF");
+		fprintf (header, " RFF");
+	}
 	if (pic->flags & PIC_FLAG_TAGS)
 	    fprintf (f, " pts %08x dts %08x", pic->tag, pic->tag2);
 	fprintf (f, " time_ref %d", pic->temporal_reference);
@@ -399,6 +421,7 @@ void dump_state (FILE * f, mpeg2_state_t state, const mpeg2_info_t * info,
 	    fprintf (f, " %d/%d",
 		     pic->display_offset[i].x, pic->display_offset[i].y);
 	fprintf (f, "\n");
+	fprintf (header, " \n");
 	break;
     default:
 	fprintf (f, "\n");
