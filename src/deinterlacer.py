@@ -40,9 +40,8 @@ def deinterlace_bob(input_dir: str, output_dir: str, deinterlace_mask: np.ndarra
 
         else:
             raise ValueError("Invalid deinterlace mask value: %d" % deinterlace_mask[i])
-        print(f"count: {count}, fname: {fnames[i]}")
     
-    print(f"Total frames: {count}, from {len(images)} input frames.")
+    print(f"Total frames after deinterlacement: {count}, from {len(images)} input frames.")
 
 
 def deinterlace_weave(input_dir: str, output_dir: str) -> None:

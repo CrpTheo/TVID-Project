@@ -2,7 +2,7 @@ import numpy as np
 import os
 import sys
 
-from deinterlacer import deinterlace_bob
+from src.deinterlacer import deinterlace_bob
 
 
 def get_deinterlace_mask(input_dir: str) -> np.ndarray:
@@ -37,9 +37,7 @@ def get_deinterlace_mask(input_dir: str) -> np.ndarray:
         
         i += 1
 
-    print(TFF_mask)
     print(f"Total frames to deinterlace: {total_frames - prog_count}, from {total_frames} input frames.")
-    print(f"Overflow: {overflow} frames.")
 
     return TFF_mask
 

@@ -7,7 +7,7 @@ import sys
 import time
 
 from PIL import Image
-from converter import yuv_to_rgb
+from src.converter import yuv_to_rgb
 from multiprocessing import Pool
 from itertools import repeat
 
