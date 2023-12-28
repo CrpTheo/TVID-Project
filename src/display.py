@@ -17,7 +17,7 @@ def compute_frame(frame_name: str) -> np.ndarray:
     return yuv_to_rgb(img)
 
 def update(frame_name):
-    img = compute_frame(f"data/elementary/lci/{frame_name}.pgm")
+    img = compute_frame(frame_name)
     im.set_array(img)
 
     return im,
@@ -31,10 +31,10 @@ def count_files(directory: str) -> int:
 
 def get_sequence_infos(directory: str) -> (int, int, int, np.ndarray):
     num_files = count_files(directory)
-    img = yuv_to_rgb(plt.imread(f"{directory}/0.pgm").astype(np.float16))
+    img = yuv_to_rgb(plt.imread(os.path.join(directory, "0.pgm")).astype(np.float16))
     height, width, _ = img.shape
 
-    return height, width, num_files, img
+    return height, width, num_files - 1, img
 
 def compute_and_write_frame(frame_data):
     frame_name, input_dir, output_dir = frame_data
@@ -64,8 +64,8 @@ if __name__ == "__main__":
         fig, ax = plt.subplots()
 
         im = ax.imshow(frame0)
-
-        ani = animation.FuncAnimation(fig, update, frames=range(1, num_files), interval=int(1000/frame_rate), blit=True, repeat=False)
+        frame_names = [os.path.join(directory, f"{i}.pgm") for i in range(1, num_files)]
+        ani = animation.FuncAnimation(fig, update, frames=frame_names, interval=int(1000/frame_rate), blit=True, repeat=False)
         start_time = time.time()
         plt.show()
         end_time = time.time()
@@ -76,8 +76,11 @@ if __name__ == "__main__":
     elif args[1] == "write":
         num_files = count_files(directory)
 
+        output_dir = f"{directory}_rgb"
+        os.mkdir(output_dir)
+        print(f"Writing to {output_dir}")
         start_time = time.time()
-        write_all_frames(directory, "data/elementary/lci_rgb", num_files)
+        write_all_frames(directory, output_dir, num_files)
         end_time = time.time()
         elapsed_time = end_time - start_time
 
